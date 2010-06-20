@@ -2,3 +2,5 @@ src/**/bin
 src/**/Bin
 obj
 ClientBin
+*.suo
+*.csproj.user
