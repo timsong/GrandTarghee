@@ -1,0 +1,5 @@
+C:\Repository\Silverlight\Grand Targhee\src\GrandTarghee.Framework\bin\Debug\GrandTarghee.Framework.dll
+C:\Repository\Silverlight\Grand Targhee\src\GrandTarghee.Framework\bin\Debug\GrandTarghee.Framework.pdb
+C:\Repository\Silverlight\Grand Targhee\src\GrandTarghee.Framework\obj\Debug\ResolveAssemblyReference.cache
+C:\Repository\Silverlight\Grand Targhee\src\GrandTarghee.Framework\obj\Debug\GrandTarghee.Framework.dll
+C:\Repository\Silverlight\Grand Targhee\src\GrandTarghee.Framework\obj\Debug\GrandTarghee.Framework.pdb

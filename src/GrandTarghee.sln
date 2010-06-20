@@ -1,0 +1,45 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrandTarghee.Framework.Silverlight", "GrandTarghee.Framework.Silverlight\GrandTarghee.Framework.Silverlight.csproj", "{8C6AB22E-3395-4CBB-9237-2C2D56137083}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GrandTarghee.Framework", "GrandTarghee.Framework\GrandTarghee.Framework.csproj", "{9767AE43-23EA-4E20-A003-53AE440F6800}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Bin", "Bin", "{8237778D-C3E8-4342-97AD-F58D7D94A447}"
+	ProjectSection(SolutionItems) = preProject
+		..\bin\Microsoft.Practices.ServiceLocation.Silverlight.dll = ..\bin\Microsoft.Practices.ServiceLocation.Silverlight.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "StructureMap", "StructureMap", "{0D846BC7-D13F-40FB-A1B0-4765F56A60A7}"
+	ProjectSection(SolutionItems) = preProject
+		..\bin\StructureMap\StructureMap.dll = ..\bin\StructureMap\StructureMap.dll
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Unity", "Unity", "{48B1665C-4727-4936-8CBA-9264667C4F6A}"
+	ProjectSection(SolutionItems) = preProject
+		..\bin\Unity\Microsoft.Practices.Unity.Silverlight.dll = ..\bin\Unity\Microsoft.Practices.Unity.Silverlight.dll
+	EndProjectSection
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{8C6AB22E-3395-4CBB-9237-2C2D56137083}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8C6AB22E-3395-4CBB-9237-2C2D56137083}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8C6AB22E-3395-4CBB-9237-2C2D56137083}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8C6AB22E-3395-4CBB-9237-2C2D56137083}.Release|Any CPU.Build.0 = Release|Any CPU
+		{9767AE43-23EA-4E20-A003-53AE440F6800}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9767AE43-23EA-4E20-A003-53AE440F6800}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9767AE43-23EA-4E20-A003-53AE440F6800}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9767AE43-23EA-4E20-A003-53AE440F6800}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{0D846BC7-D13F-40FB-A1B0-4765F56A60A7} = {8237778D-C3E8-4342-97AD-F58D7D94A447}
+		{48B1665C-4727-4936-8CBA-9264667C4F6A} = {8237778D-C3E8-4342-97AD-F58D7D94A447}
+	EndGlobalSection
+EndGlobal
