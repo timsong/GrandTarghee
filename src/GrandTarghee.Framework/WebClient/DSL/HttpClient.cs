@@ -250,7 +250,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        public IHttpClient AccessRequest(Action<HttpWebRequest> access)
+        public IHttpClient AccessHttpRequest(Action<HttpWebRequest> access)
         {
             this._accessRequestMethod = access;
             return this;
@@ -331,7 +331,11 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             var builder = new UriBuilder(this.BaseUri.Scheme, this.BaseUri.Host);
             builder.Path = this.BaseUri.LocalPath;
-            builder.Query = this.QueryString;
+
+            if (!string.IsNullOrEmpty(this.QueryString))
+            {
+                builder.Query = this.QueryString.Substring(1);
+            }
 
             return builder.Uri;
         }

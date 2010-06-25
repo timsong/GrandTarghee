@@ -21,7 +21,7 @@ namespace GrandTarghee.Framework.WebClient
         /// </summary>
         /// <param name="modifyRequest"></param>
         /// <returns></returns>
-        void AccessResponse(Action<HttpWebResponse> access);
+        void AccessHttpResponse(Action<HttpWebResponse> access);
 
         #endregion
     }

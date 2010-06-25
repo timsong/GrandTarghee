@@ -1,8 +1,8 @@
 ﻿using System;
-using System.Xml.Linq;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
-using System.Collections.Generic;
+using System.Xml.Linq;
 
 namespace GrandTarghee.Framework.WebClient
 {
@@ -20,33 +20,27 @@ namespace GrandTarghee.Framework.WebClient
         #region Methods
 
         /// <summary>
-        /// Sets the method of the http client to post.
-        /// </summary>
-        /// <returns></returns>
-        IHttpPostClient Post();
-
-        /// <summary>
         /// Sets the method of the http client to put.
         /// </summary>
         /// <returns></returns>
         IHttpPostClient Put();
 
         /// <summary>
-        /// Writes data the http client request.
+        /// Writes the data to the http client request stream as is.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         IHttpPostClient Data(string data);
 
         /// <summary>
-        /// Writes data to the http client request using the name value format (ie. name1=value1&name2=value2...).
+        /// Writes the data to the http client request stream name value format (i.e. key1=value1&key2=value2&...).
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         IHttpPostClient Data(IDictionary<string, string> data);
 
         /// <summary>
-        /// Writes data to the http client request .
+        /// Writes the data to the http client request stream as xml.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -57,14 +51,14 @@ namespace GrandTarghee.Framework.WebClient
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        IHttpPostClient AccessRequestStream(Action<Stream> access);
+        IHttpPostClient AccessRequestStream(Action<HttpWebRequest, Stream> access);
 
         /// <summary>
         /// Access the response stream prior to reading the response from the stream.
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        IHttpPostClient AccessResponseStream(Action<Stream> access);
+        IHttpPostClient AccessResponseStream(Action<HttpWebResponse, Stream> access);
 
         /// <summary>
         /// Gets the response from the get call in the form of a string.
@@ -72,13 +66,6 @@ namespace GrandTarghee.Framework.WebClient
         /// <param name="callback">Callback to handle the response.</param>
         /// <returns></returns>
         IHttpClientResponse GetResponse(Action<string> callback);
-
-        /// <summary>
-        /// Gets the response from the asynchronous post call in the form of a string.
-        /// </summary>
-        /// <param name="callback">Callback to handle the response.</param>
-        /// <returns></returns>
-        void GetResponseAsync(Action<string> callback);
 
         /// <summary>
         /// Gets the response from the get call in the form of an XElement.
@@ -89,12 +76,21 @@ namespace GrandTarghee.Framework.WebClient
         IHttpClientResponse GetResponse(Action<XElement> callback);
 
         /// <summary>
+        /// Gets the response from the asynchronous post call in the form of a string.
+        /// </summary>
+        /// <param name="callback">Callback to handle the response.</param>
+        /// <returns></returns>
+        void GetResponseAsync(Action<string> callback);
+
+        /// <summary>
         /// Gets the response from the asynchronous post call in the form of an XElement.
         /// The format of the response need to in xml.
         /// </summary>
         /// <param name="callback">Callback to handle the response.</param>
         /// <returns></returns>
         void GetResponseAsync(Action<XElement> callback);
+
+        
 
         #endregion
     }

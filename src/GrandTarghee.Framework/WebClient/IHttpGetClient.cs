@@ -1,7 +1,7 @@
 ﻿using System;
-using System.Xml.Linq;
 using System.IO;
 using System.Net;
+using System.Xml.Linq;
 
 namespace GrandTarghee.Framework.WebClient
 {
@@ -23,7 +23,7 @@ namespace GrandTarghee.Framework.WebClient
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        IHttpGetClient AccessResponseStream(Action<Stream> access);
+        IHttpGetClient AccessResponseStream(Action<HttpWebResponse, Stream> access);
 
         /// <summary>
         /// Gets the response from the get call in the form of a string.
@@ -33,19 +33,19 @@ namespace GrandTarghee.Framework.WebClient
         IHttpClientResponse GetResponse(Action<string> callback);
 
         /// <summary>
-        /// Gets the response from the asychronous get call in the form of a string.
-        /// </summary>
-        /// <param name="callback">Callback to handle the response.</param>
-        /// <returns></returns>
-        void GetResponseAsync(Action<string> callback);
-
-        /// <summary>
         /// Gets the response from the get call in the form of an XElement.
         /// The format of the response need to in xml.
         /// </summary>
         /// <param name="callback">Callback to handle the response.</param>
         /// <returns></returns>
         IHttpClientResponse GetResponse(Action<XElement> callback);
+
+        /// <summary>
+        /// Gets the response from the asychronous get call in the form of a string.
+        /// </summary>
+        /// <param name="callback">Callback to handle the response.</param>
+        /// <returns></returns>
+        void GetResponseAsync(Action<string> callback);
 
         /// <summary>
         /// Gets the response from the asychronous get call in the form of an XElement.

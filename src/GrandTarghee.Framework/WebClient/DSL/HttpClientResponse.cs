@@ -36,7 +36,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        public void AccessResponse(Action<HttpWebResponse> access)
+        public void AccessHttpResponse(Action<HttpWebResponse> access)
         {
             access(this.Response);
         }

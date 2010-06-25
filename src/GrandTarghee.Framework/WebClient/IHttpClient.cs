@@ -102,7 +102,7 @@ namespace GrandTarghee.Framework.WebClient
         /// </summary>
         /// <param name="modifyRequest"></param>
         /// <returns></returns>
-        IHttpClient AccessRequest(Action<HttpWebRequest> access);
+        IHttpClient AccessHttpRequest(Action<HttpWebRequest> access);
 
         /// <summary>
         /// Sets the method type to a get.

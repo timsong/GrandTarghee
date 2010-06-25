@@ -9,8 +9,10 @@ namespace GrandTarghee.Framework.WebClient.DSL
 {
     public class HttpPostClient : IHttpPostClient
     {
-        private Action<Stream> _accessRequestStreamMethod;
-        private Action<Stream> _accessResponseStreamMethod;
+        private Action<HttpWebRequest, Stream> _accessRequestStreamMethod;
+        private Action<HttpWebResponse, Stream> _accessResponseStreamMethod;
+
+        private string _data;
 
         #region Properties
 
@@ -38,16 +40,6 @@ namespace GrandTarghee.Framework.WebClient.DSL
         #region Methods
 
         /// <summary>
-        /// Sets the method of the http client to post.
-        /// </summary>
-        /// <returns></returns>
-        public IHttpPostClient Post()
-        {
-            this.Request.Method = "POST";
-            return this;
-        }
-
-        /// <summary>
         /// Sets the method of the http client to put.
         /// </summary>
         /// <returns></returns>
@@ -58,22 +50,20 @@ namespace GrandTarghee.Framework.WebClient.DSL
         }
 
         /// <summary>
-        /// Sets the data to write to the http client.
+        /// Writes the data to the http client request stream as is.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
         public IHttpPostClient Data(string data)
         {
-            using (var stream = this.Request.GetRequestStream())
-            {
-                ProcessRequestStream(stream, data);
-            }
+            this.Request.ContentLength = data.Length;
+            this._data = data;
 
             return this;
         }
 
         /// <summary>
-        /// 
+        /// Writes the data to the http client request stream name value format (i.e. key1=value1&key2=value2&...).
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -81,20 +71,19 @@ namespace GrandTarghee.Framework.WebClient.DSL
         {
             var stringBuilder = new StringBuilder();
 
-            if (data != null)
+            // Generate the request data as name value pairs, url encoding the value.
+
+            foreach (var item in data)
             {
-                foreach (var item in data)
+                if (!item.Key.IsNullOrEmpty() && !item.Value.IsNullOrEmpty())
                 {
-                    if (!item.Key.IsNullOrEmpty() && !item.Value.IsNullOrEmpty())
+                    if (stringBuilder.Length == 0)
                     {
-                        if (stringBuilder.Length == 0)
-                        {
-                            stringBuilder.AppendFormat("{0}={1}", item.Key, item.Value);
-                        }
-                        else
-                        {
-                            stringBuilder.AppendFormat("&{0}={1}", item.Key, item.Value);
-                        }
+                        stringBuilder.AppendFormat("{0}={1}", item.Key, Uri.EscapeDataString(item.Value));
+                    }
+                    else
+                    {
+                        stringBuilder.AppendFormat("&{0}={1}", item.Key, Uri.EscapeDataString(item.Value));
                     }
                 }
             }
@@ -103,7 +92,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         }
 
         /// <summary>
-        /// Sets the data to write to the http client.
+        /// Writes the data to the http client request stream as xml.
         /// </summary>
         /// <param name="data"></param>
         /// <returns></returns>
@@ -117,7 +106,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        public IHttpPostClient AccessRequestStream(Action<Stream> access)
+        public IHttpPostClient AccessRequestStream(Action<HttpWebRequest, Stream> access)
         {
             this._accessRequestStreamMethod = access;
 
@@ -129,7 +118,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        public IHttpPostClient AccessResponseStream(Action<Stream> access)
+        public IHttpPostClient AccessResponseStream(Action<HttpWebResponse, Stream> access)
         {
             this._accessResponseStreamMethod = access;
 
@@ -143,6 +132,37 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// <returns></returns>
         public IHttpClientResponse GetResponse(Action<string> callback)
         {
+            // Write the data to the request stream.
+
+            using (var stream = this.Request.GetRequestStream())
+            {
+                this.ProcessRequestStream(stream);
+            }
+
+            // Get the response back.
+
+            var response = this.GetResponse(this.Request, callback);
+
+            return new HttpClientResponse((HttpWebResponse)response);
+        }
+
+        /// <summary>
+        /// Gets the response from the get call in the form of an XElement.
+        /// The format of the response need to in xml.
+        /// </summary>
+        /// <param name="callback">Callback to handle the response.</param>
+        /// <returns></returns>
+        public IHttpClientResponse GetResponse(Action<XElement> callback)
+        {
+            // Write the data to the request stream.
+
+            using (var stream = this.Request.GetRequestStream())
+            {
+                this.ProcessRequestStream(stream);
+            }
+
+            // Get the response back.
+
             var response = this.GetResponse(this.Request, callback);
 
             return new HttpClientResponse((HttpWebResponse)response);
@@ -162,19 +182,6 @@ namespace GrandTarghee.Framework.WebClient.DSL
             };
 
             this.Request.BeginGetResponse(new AsyncCallback(result => this.GetStringResponseAsync(result)), asyncState);
-        }
-
-        /// <summary>
-        /// Gets the response from the get call in the form of an XElement.
-        /// The format of the response need to in xml.
-        /// </summary>
-        /// <param name="callback">Callback to handle the response.</param>
-        /// <returns></returns>
-        public IHttpClientResponse GetResponse(Action<XElement> callback)
-        {
-            var response = this.GetResponse(this.Request, callback);
-
-            return new HttpClientResponse((HttpWebResponse)response);
         }
 
         /// <summary>
@@ -213,7 +220,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             using (var stream = response.GetResponseStream())
             {
-                result = ProcessResponseStream(stream);
+                result = this.ProcessResponseStream(response, stream);
 
                 // Run the callback to handle the response.
 
@@ -238,7 +245,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             using (var stream = response.GetResponseStream())
             {
-                result = ProcessResponseStream(stream);
+                result = this.ProcessResponseStream(response, stream);
 
                 // Run the callback to handle the response.
 
@@ -259,8 +266,16 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             if (state != null)
             {
-                var response = this.GetResponse(state.Request, state.Callback);
-                response.Close();
+                var response = state.Request.EndGetResponse(asyncResult) as HttpWebResponse;
+
+                using (var stream = response.GetResponseStream())
+                {
+                    var result = this.ProcessResponseStream(response, stream);
+
+                    // Run the callback to handle the response.
+
+                    state.Callback(result);
+                }
             }
         }
 
@@ -274,8 +289,17 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             if (state != null)
             {
-                var response = this.GetResponse(state.Request, state.Callback);
-                response.Close();
+                var response = state.Request.EndGetResponse(asyncResult) as HttpWebResponse;
+
+                using (var stream = response.GetResponseStream())
+                {
+                    var result = this.ProcessResponseStream(response, stream);
+
+                    // Run the callback to handle the response.
+
+                    var xelement = XElement.Parse(result);
+                    state.Callback(xelement);
+                }
             }
         }
 
@@ -284,22 +308,25 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="stream"></param>
         /// <param name="data"></param>
-        private void ProcessRequestStream(Stream stream, string data)
+        private void ProcessRequestStream(Stream stream)
         {
-            this.Request.ContentLength = data.Length;
+            if (this._data.IsNullOrEmpty())
+            {
+                return;
+            }
 
             // Allow the client to access the request stream.
 
             if (this._accessRequestStreamMethod != null)
             {
-                this._accessRequestStreamMethod(stream);
+                this._accessRequestStreamMethod(this.Request, stream);
             }
 
             // Write the data to the stream.
 
             using (var writer = new StreamWriter(stream))
             {
-                writer.Write(data);
+                writer.Write(this._data);
             }
         }
 
@@ -308,7 +335,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        private string ProcessResponseStream(Stream stream)
+        private string ProcessResponseStream(HttpWebResponse response, Stream stream)
         {
             var result = string.Empty;
 
@@ -316,7 +343,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             if (this._accessResponseStreamMethod != null)
             {
-                this._accessResponseStreamMethod(stream);
+                this._accessResponseStreamMethod(response, stream);
             }
 
             // Read from the response stream.

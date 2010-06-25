@@ -1,13 +1,13 @@
 ﻿using System;
+using System.IO;
 using System.Net;
 using System.Xml.Linq;
-using System.IO;
 
 namespace GrandTarghee.Framework.WebClient.DSL
 {
     public class HttpGetClient : IHttpGetClient
     {
-        private Action<Stream> _accessResponseStreamMethod;
+        private Action<HttpWebResponse, Stream> _accessResponseStreamMethod;
 
         #region Properties
 
@@ -39,7 +39,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="access"></param>
         /// <returns></returns>
-        public IHttpGetClient AccessResponseStream(Action<Stream> access)
+        public IHttpGetClient AccessResponseStream(Action<HttpWebResponse, Stream> access)
         {
             this._accessResponseStreamMethod = access;
 
@@ -59,6 +59,19 @@ namespace GrandTarghee.Framework.WebClient.DSL
         }
 
         /// <summary>
+        /// Gets the response from the get call in the form of an XElement.
+        /// The format of the response need to in xml.
+        /// </summary>
+        /// <param name="callback">Callback to handle the response.</param>
+        /// <returns></returns>
+        public IHttpClientResponse GetResponse(Action<XElement> callback)
+        {
+            var response = this.GetResponse(this.Request, callback);
+
+            return new HttpClientResponse((HttpWebResponse)response);
+        }
+
+        /// <summary>
         /// Gets the response from the asychronous get call in the form of a string.
         /// </summary>
         /// <param name="callback">Callback to handle the response.</param>
@@ -71,20 +84,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
                 Callback = callback
             };
 
-            this.Request.BeginGetResponse(new AsyncCallback(result => this.AsyncGetStringResponse(result)), asyncState);
-        }
-
-        /// <summary>
-        /// Gets the response from the get call in the form of an XElement.
-        /// The format of the response need to in xml.
-        /// </summary>
-        /// <param name="callback">Callback to handle the response.</param>
-        /// <returns></returns>
-        public IHttpClientResponse GetResponse(Action<XElement> callback)
-        {
-            var response = this.GetResponse(this.Request, callback);
-
-            return new HttpClientResponse((HttpWebResponse)response);
+            this.Request.BeginGetResponse(new AsyncCallback(result => this.GetStringResponseAsync(result)), asyncState);
         }
 
         /// <summary>
@@ -101,7 +101,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
                 Callback = callback
             };
 
-            this.Request.BeginGetResponse(new AsyncCallback(result => this.AsyncGetXElementResponse(result)), asyncState);
+            this.Request.BeginGetResponse(new AsyncCallback(result => this.GetXElementResponseAsync(result)), asyncState);
         }
 
         #endregion
@@ -116,12 +116,11 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// <returns></returns>
         private HttpWebResponse GetResponse(HttpWebRequest request, Action<string> callback)
         {
-            var result = string.Empty;
             var response = this.Request.GetResponse() as HttpWebResponse;
 
             using (var stream = response.GetResponseStream())
             {
-                result = ProcessStream(stream);
+                var result = this.ProcessStream(response, stream);
 
                 // Run the callback to handle the response.
 
@@ -139,12 +138,11 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// <returns></returns>
         private HttpWebResponse GetResponse(HttpWebRequest request, Action<XElement> callback)
         {
-            var result = string.Empty;
             var response = this.Request.GetResponse() as HttpWebResponse;
 
             using (var stream = response.GetResponseStream())
             {
-                result = ProcessStream(stream);
+                var result = this.ProcessStream(response, stream);
 
                 // Run the callback to handle the response.
 
@@ -159,14 +157,22 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// 
         /// </summary>
         /// <param name="asyncResult"></param>
-        private void AsyncGetStringResponse(IAsyncResult asyncResult) 
+        private void GetStringResponseAsync(IAsyncResult asyncResult) 
         {
             var state = asyncResult.AsyncState as AsyncState<string>;
 
-            if(state != null)
+            if (state != null)
             {
-                var response = this.GetResponse(state.Request, state.Callback);
-                response.Close();
+                var response = state.Request.EndGetResponse(asyncResult) as HttpWebResponse;
+
+                using (var stream = response.GetResponseStream())
+                {
+                    var result = this.ProcessStream(response, stream);
+
+                    // Run the callback to handle the response.
+
+                    state.Callback(result);
+                }
             }
         }
 
@@ -174,14 +180,23 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// 
         /// </summary>
         /// <param name="asyncResult"></param>
-        private void AsyncGetXElementResponse(IAsyncResult asyncResult)
+        private void GetXElementResponseAsync(IAsyncResult asyncResult)
         {
             var state = asyncResult.AsyncState as AsyncState<XElement>;
 
             if (state != null)
             {
-                var response = this.GetResponse(state.Request, state.Callback);
-                response.Close();
+                var response = state.Request.EndGetResponse(asyncResult) as HttpWebResponse;
+
+                using (var stream = response.GetResponseStream())
+                {
+                    var result = this.ProcessStream(response, stream);
+
+                    // Run the callback to handle the response.
+
+                    var xelement = XElement.Parse(result);
+                    state.Callback(xelement);
+                }
             }
         }
 
@@ -190,7 +205,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
         /// </summary>
         /// <param name="stream"></param>
         /// <returns></returns>
-        private string ProcessStream(Stream stream)
+        private string ProcessStream(HttpWebResponse response, Stream stream)
         {
             var result = string.Empty;
 
@@ -198,7 +213,7 @@ namespace GrandTarghee.Framework.WebClient.DSL
 
             if (this._accessResponseStreamMethod != null)
             {
-                this._accessResponseStreamMethod(stream);
+                this._accessResponseStreamMethod(response, stream);
             }
 
             // Read from the response stream.
